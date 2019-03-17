@@ -14,6 +14,8 @@ class TasksController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function index()
+    
+    /** //前回課題の記述　ここから
     {
     $tasks = Task::all();
 
@@ -21,6 +23,27 @@ class TasksController extends Controller
             'tasks' => $tasks,
         ]);
     }
+     */
+     
+    //今回課題の記述
+    {
+        $data = [];
+        if (\Auth::check()) {
+            $user = \Auth::user();
+            $tasks = $user->tasks()->orderBy('created_at', 'desc')->paginate(10);
+            
+            $data = [
+                'user' => $user,
+                'tasks' => $tasks,
+            ];
+        
+       // return view('tasks.index',$data);    
+            
+        }
+        
+        return view('welcome', $data);
+    }
+
 
     /**
      * Show the form for creating a new resource.
@@ -46,6 +69,8 @@ class TasksController extends Controller
      */
     public function store(Request $request)
     {
+        
+    /** //前回課題の記述　ここから    
         $this->validate($request, [
         'status'  => 'required|max:10',
         'content' => 'required|max:191',
@@ -57,6 +82,20 @@ class TasksController extends Controller
         $task->save();
 
         return redirect('/');
+    */
+    
+    $this->validate($request, [
+        'status'  => 'required|max:10',
+        'content' => 'required|max:191',
+        ]);
+
+        $request->user()->tasks()->create([
+        'content' => $request->content,
+        'status' => $request->status,
+        ]);
+
+        return redirect('/');
+    
     }
 
     /**
@@ -68,10 +107,16 @@ class TasksController extends Controller
     public function show($id)
     {
         $task = Task::find($id);
+        
+        if (\Auth::id() === $task->user_id){ 
 
         return view('tasks.show', [
             'task' => $task,
         ]);
+        }
+        
+        return redirect('/');
+        
     }
 
     /**
@@ -119,9 +164,28 @@ class TasksController extends Controller
      */
     public function destroy($id)
     {
+        
+    /**前回の記述    
         $task = Task::find($id);
         $task->delete();
 
         return redirect('/');
+        
+    */
+    
+        $task = \App\Task::find($id);
+
+        if (\Auth::id() === $task->user_id) {
+            $task->delete();
+        }
+
+        return back();
+    
     }
 }
+
+
+
+
+
+
